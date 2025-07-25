@@ -290,12 +290,16 @@ if ffi.os == "Windows" then
     ffi.cdef[[
     unsigned long GetCurrentProcessId();
     ]]
+    
     pid = ffi.C.GetCurrentProcessId()
+    file.named_pipes_prefix = "\\\\.\\pipe\\"
 else
     ffi.cdef[[
     int getpid(void);
     ]]
+
     pid = ffi.C.getpid()
+    file.named_pipes_prefix = "/tmp/"
 end
 
 ffi = nil
