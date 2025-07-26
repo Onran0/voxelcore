@@ -34,10 +34,7 @@ local function complete_app_lib(app)
     app.reconfig_packs = core.reconfig_packs
     app.get_setting = core.get_setting
     app.set_setting = core.set_setting
-    app.tick = function()
-        coroutine.yield()
-        network.__process_events()
-    end
+    app.tick = coroutine.yield
     app.get_version = core.get_version
     app.get_setting_info = core.get_setting_info
     app.load_content = function()
@@ -279,6 +276,7 @@ entities.get_all = function(uids)
         return stdcomp.get_all(uids)
     end
 end
+
 local bytearray = require "core:internal/bytearray"
 
 Bytearray = bytearray.FFIBytearray
@@ -452,10 +450,15 @@ function __vc_on_world_save()
     file.write(RULES_FILE, toml.tostring(rule_values))
 end
 
+local file_close_all_descriptors = file.__close_all_descriptors
+
+file.__close_all_descriptors = nil
+
 function __vc_on_world_quit()
     _rules.clear()
     gui_util:__reset_local()
     stdcomp.__reset()
+    file_close_all_descriptors()
 end
 
 local __vc_coroutines = {}
@@ -552,14 +555,8 @@ local removed_names = {
     "getregistry", "getupvalue", "setupvalue", "upvalueid", "upvaluejoin",
     "sethook", "gethook", "getinfo"
 }
-local _getinfo = debug.getinfo
 for i, name in ipairs(removed_names) do
     debug[name] = nil
-end
-debug.getinfo = function(...)
-    local debuginfo = _getinfo(...)
-    debuginfo.func = nil
-    return debuginfo
 end
 
 -- --------- Deprecated functions ------ --
