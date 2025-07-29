@@ -1,3 +1,4 @@
+local path_validate = require "core:internal/stream_providers/named_pipe_path_validate"
 local io_stream = require "core:io_stream"
 
 local FFI = ffi
@@ -72,6 +73,10 @@ function lib.close(fd)
 end
 
 return function(path, mode)
+    path_validate(path)
+
+    path = "/tmp/"..path
+
     local read = mode:find('r') ~= nil
     local write = mode:find('w') ~= nil
 
