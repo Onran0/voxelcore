@@ -232,7 +232,6 @@ function io_stream:write_line(str)
 end
 
 function io_stream:read(arg, useTable)
-	print("ccc")
 	local argType = type(arg)
 
 	if self.binaryMode then
