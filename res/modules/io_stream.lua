@@ -56,16 +56,17 @@ ioLib - I/O library. Should include the following functions:
 
 function io_stream.new(descriptor, binaryMode, ioLib, mode, flushMode)
 	mode = mode or DEFAULT_MODE
+	flushMode = flushMode or FLUSH_MODE_ALL
 
     local self = setmetatable({}, io_stream)
 
     self.descriptor = descriptor
     self.binaryMode = binaryMode
-    self.flushMode = flushMode or FLUSH_MODE_DEFAULT
     self.maxBufferSize = MAX_BUFFER_SIZE
     self.ioLib = ioLib
 
     self:set_mode(mode)
+    self:set_flush_mode(flushMode)
 
     return self
 end
@@ -80,10 +81,11 @@ function io_stream:set_mode(mode)
 	end
 
 	if self.mode == BUFFERED_MODE then
-		self.buffer:clear()
+		self.writeBuffer:clear()
+		self.readBuffer:clear()
 	end
 
-	if mode == BUFFERED_MODE and not self.buffer then
+	if mode == BUFFERED_MODE and not self.writeBuffer then
 		self.writeBuffer = Bytearray()
 		self.readBuffer = Bytearray()
 	end
