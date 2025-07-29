@@ -63,7 +63,7 @@ function lib.read(handle, len)
     if not has_data then
         return out
     elseif hasData == -1 then
-        error("failed to read from named pipe: "..C.GetLastError())
+        error("failed to read from named pipe: "..tostring(C.GetLastError()))
     end
 
     local buffer = FFI.new("uint8_t[?]", len)
@@ -93,7 +93,7 @@ function lib.write(handle, bytearray)
     local written = FFI.new("DWORD[1]")
 
     if C.WriteFile(handle, buffer, len, written, nil) == 0 then
-        error("failed to write to named pipe: "..C.GetLastError())
+        error("failed to write to named pipe: "..tostring(C.GetLastError()))
     end
 end
 
@@ -137,7 +137,7 @@ return function(path, mode)
         FILE_ATTRIBUTE_NORMAL, nil)
 
     if handle == INVALID_HANDLE_VALUE then
-        error("failed to open named pipe: "..C.GetLastError())
+        error("failed to open named pipe: "..tostring(C.GetLastError()))
     end
 
     return io_stream.new(handle, mode:find('b') ~= nil, lib)
