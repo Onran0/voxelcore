@@ -71,6 +71,14 @@ function io_stream.new(descriptor, binaryMode, ioLib, mode, flushMode)
     return self
 end
 
+function io_stream:is_binary_mode()
+    return self.binaryMode
+end
+
+function io_stream:set_binary_mode(binaryMode)
+    self.binaryMode = binaryMode ~= nil
+end
+
 function io_stream:get_mode()
     return self.mode
 end
@@ -125,7 +133,7 @@ function io_stream:available(length)
     end
 end
 
-function io_stream:__update_read_buffer()    
+function io_stream:__update_read_buffer()
     local readed = Bytearray()
 
     readFully(readed, function(length) return self.ioLib.read(self.descriptor, length) end)
@@ -192,26 +200,44 @@ function io_stream:__write(data)
 end
 
 function io_stream:read_fully(useTable)
-    useTable = useTable and self.binaryMode
-
-    local result = useTable and Bytearray() or { }
-
-    readFully(result, function() return self:__read(#self.readBuffer) end)
-
     if self.binaryMode then
-        return result
+        local result = useTable and Bytearray() or { }
+
+        readFully(result, function() return self:__read(self.maxBufferSize) end)
     else
-        return utf8.tostring(result)
+        if useTable then
+            local lines = { }
+
+            local line
+
+            repeat
+                line = self:read_line()
+
+                lines[#lines + 1] = line
+            until not line
+
+            return lines
+        else
+            local result = Bytearray()
+
+            readFully(result, function() return self:__read(self.maxBufferSize) end)
+
+            return utf8.tostring(result)
+        end
     end
 end
 
 function io_stream:read_line()
     local result = Bytearray()
 
+    local first = true
+
     while true do
         local char = self:__read(1)
 
-        if #char == 0 then break end
+        if #char == 0 then
+            if first then return else break end
+        end
 
         char = char[1]
 
@@ -219,16 +245,21 @@ function io_stream:read_line()
         elseif char == CR then
             char = self:__read(1)
 
-            if #char == 0 or char[1] == LF then break
-            else result:append(char[1]) end
+            if char[1] == LF then break
+            else
+                result:append(CR)
+                result:append(char[1])
+            end
         else result:append(char) end
+
+        first = false
     end
 
     return utf8.tostring(result)
 end
 
 function io_stream:write_line(str)
-    self:__write(utf8.tobytes(str + LF))
+    self:__write(utf8.tobytes(str .. LF))
 end
 
 function io_stream:read(arg, useTable)
@@ -271,7 +302,7 @@ function io_stream:read(arg, useTable)
             return self:read_line()
         else
             local linesCount = arg
-            local clearLastEmptyLines = useTable or true
+            local trimLastEmptyLines = useTable or true
 
             if linesCount < 0 then error "count of lines to read must be positive" end
 
@@ -281,7 +312,7 @@ function io_stream:read(arg, useTable)
                 result[i] = self:read_line()
             end
 
-            if clearLastEmptyLines then
+            if trimLastEmptyLines then
                 local i = #result
 
                 while i >= 0 do
@@ -291,6 +322,15 @@ function io_stream:read(arg, useTable)
                     else result[i] = nil end
 
                     i = i - 1
+                end
+
+                local i = 1
+
+                while #result > 0 do
+                    local length = utf8.length(result[i])
+
+                    if length > 0 then break
+                    else table.remove(result, i) end
                 end
             end
 
@@ -322,7 +362,9 @@ function io_stream:write(arg, ...)
         if argType == "string" then
             self:write_line(arg)
         elseif argType == "table" then
-
+            for i = 1, #arg do
+                self:write_line(arg[i])
+            end
         else error("unknown argument type: "..argType) end
     end
 end

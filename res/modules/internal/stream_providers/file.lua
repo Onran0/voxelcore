@@ -10,7 +10,7 @@ local lib = {
 
 return function(path, mode)
     return io_stream.new(
-        file.__open(path, mode),
+        file.__open_descriptor(path, mode),
         mode:find('b') ~= nil,
         lib
     )
