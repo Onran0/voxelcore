@@ -294,13 +294,13 @@ if ffi.os == "Windows" then
     unsigned long GetCurrentProcessId();
     ]]
     
-    pid = ffi.C.GetCurrentProcessId()
+    os.pid = ffi.C.GetCurrentProcessId()
 else
     ffi.cdef[[
     int getpid(void);
     ]]
 
-    pid = ffi.C.getpid()
+    os.pid = ffi.C.getpid()
 end
 
 ffi = nil
