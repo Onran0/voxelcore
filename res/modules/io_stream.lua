@@ -18,7 +18,7 @@ local FLUSH_MODE_ALL = "all"
 local FLUSH_MODE_ONLY_BUFFER = "buffer"
 
 local ALL_FLUSH_MODES = {
-    FLUSH_MODE_DEFAULT,
+    FLUSH_MODE_ALL,
     FLUSH_MODE_ONLY_BUFFER
 }
 
