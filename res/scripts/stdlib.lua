@@ -455,6 +455,7 @@ function __vc_on_world_quit()
     _rules.clear()
     gui_util:__reset_local()
     stdcomp.__reset()
+    file.__close_all_descriptors()
 end
 
 local __vc_coroutines = {}
